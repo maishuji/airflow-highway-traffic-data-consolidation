@@ -2,6 +2,7 @@
 ## Project Overview
 
 This project implements an Extract, Transform, and Load (ETL) pipeline using Apache Airflow. The goal is to address highway congestion by consolidating road traffic data from different toll plazas. The challenge lies in the diverse data formats used by various toll operators, including CSV, TSV, and fixed-width files. The pipeline is designed to collect data from these disparate sources, transform it into a standardized format, and load it into a staging area for further analysis.
+
 ### Technologies Used
 
 - Apache Airflow: The primary orchestration tool for scheduling and managing the ETL workflow.
