@@ -22,8 +22,24 @@ dag = DAG(
     schedule_interval=timedelta(days=1), # Run once every day
 )
 
-unzip_data_task = BashOperator(
+unzip_data = BashOperator(
     task_id='unzip_data',
-    bash_command='echo "Unzipping data..."', # This is a placeholder command
+    bash_command='tar -xvzf ./tolldata.tgz -C ./data/',
+    dag=dag,
+)
+
+extract_data_from_csv = BashOperator(
+    task_id='extract_data_from_csv',
+    bash_command='cut -d"," -f1,2,3,4 '
+                 './data/vehicle-data.csv '
+                 '> ./data/csv_data.csv',
+    dag=dag,
+)
+
+extract_data_from_tsv = BashOperator(
+    task_id='extract_data_from_tsv',
+    bash_command='cut -f5,6,7 '
+                 './data/tollplaza-data.tsv '
+                 '> ./data/tsv_data.csv',
     dag=dag,
 )
