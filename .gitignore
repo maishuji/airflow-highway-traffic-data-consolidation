@@ -1,2 +1,10 @@
 venv/
 .private/
+**/*.csv
+**/*.tsv
+**/*.txt
+**/*.tgz
+**/*.tgz.*
+**/*.log
+**/__pycache__/
+**/*.pyc
