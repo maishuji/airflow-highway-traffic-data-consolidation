@@ -29,7 +29,7 @@ Each Airflow run extracts into its own temporary work directory. At the start of
 
 ### ETL Pipeline Tasks
 
-The Apache Airflow Directed Acyclic Graph (DAG) for this project is structured to perform the following tasks sequentially.
+The Apache Airflow Directed Acyclic Graph (DAG) for this project is structured to perform the following tasks, with the three extractors running in parallel after input validation.
 #### 1. Preparation
 
 - Task 1.1: Define a set of default arguments for the DAG, including the owner, start date, and retry settings.
@@ -41,10 +41,10 @@ The Apache Airflow Directed Acyclic Graph (DAG) for this project is structured t
 
 This phase involves extracting data from three different file formats into a single, temporary file.
 
-- Task 2.2: Extract data from the tolldata.csv file.
-- Task 2.3: Extract data from the tollplaza_data.tsv file.
+- Task 2.2: Extract fields 1–4 from `vehicle-data.csv` into `data/csv_data.csv`.
+- Task 2.3: Extract fields 5–7 from `tollplaza-data.tsv` into `data/tsv_data.csv`.
 - Task 2.4: Extract data from a fixed-width file (payment-data.txt).
-- Task 2.5: Consolidate the data extracted from the CSV, TSV, and fixed-width files into a single extracted_data.txt file.
+- Task 2.5: Consolidate the extracted files into `data/extracted_data.csv`.
 - Task 2.5.1: Validate that the consolidated output is non-empty and has nine fields per row.
 
 #### 3. Transform
