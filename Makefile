@@ -10,3 +10,6 @@ create-venv:
 	python3 -m venv ./venv && \
 	./venv/bin/python3 -m pip install --upgrade pip && \
 	./venv/bin/python3 -m pip install -r requirements.txt
+
+test:
+	python3 -m unittest discover -s tests -p 'test_*.py'
