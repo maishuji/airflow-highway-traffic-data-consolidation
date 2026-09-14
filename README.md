@@ -9,6 +9,20 @@ This project implements an Extract, Transform, and Load (ETL) pipeline using Apa
 - Python: Used for scripting the data extraction and transformation logic.
 - Bash: Utilized via Airflow's BashOperator to execute shell commands for tasks like unzipping and data manipulation.
 
+### Data contract
+
+The input archive is expected to contain three source files. The extraction stage keeps the selected fields in source order and consolidates them into one comma-separated row:
+
+| Source | Format and selected positions | Normalized fields |
+| --- | --- | --- |
+| `vehicle-data.csv` | Comma-separated fields 1–4 | `vehicle_id`, `vehicle_type`, `vehicle_number`, `tollplaza_id` |
+| `tollplaza-data.tsv` | Tab-separated fields 5–7 | `number_of_axles`, `tollplaza_id`, `tollplaza_code` |
+| `payment-data.txt` | Fixed-width characters 1–10 and 11–20 | `payment_type_code`, `vehicle_code` |
+
+Fixed-width positions are one-based and inclusive. The normalized output is therefore nine fields per source row: four CSV fields, three TSV fields, and two payment fields. The fixture is expected to keep corresponding records aligned by row for the consolidation step.
+
+The transformation contract for this assignment is to uppercase `vehicle_type`. Numeric rounding is not part of the source-file contract because the selected source fields do not define `vehicle_count` or `toll_amount`; any future numeric transformation must first add an explicit schema mapping and tests.
+
 ### ETL Pipeline Tasks
 
 The Apache Airflow Directed Acyclic Graph (DAG) for this project is structured to perform the following tasks sequentially.
@@ -29,7 +43,7 @@ This phase involves extracting data from three different file formats into a sin
 
 #### 3. Transform
 
-- Task 2.6: Transform the consolidated data by rounding the vehicle_count and toll_amount values to the nearest integer.
+- Task 2.6: Transform the consolidated data by uppercasing the `vehicle_type` field.
 
 #### 4. Load
 
