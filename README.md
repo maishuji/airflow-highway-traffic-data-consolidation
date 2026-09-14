@@ -62,6 +62,7 @@ The DAG's task pipeline defines the flow of the ETL process, ensuring that tasks
 unzip_data -> validate_input_data -> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] -> consolidate_data -> validate_consolidated_data -> transform_data -> load_data
 ### How to Run the Project
 
+- Prepare data: Run `make extract-data`. Override `DATA_URL`, `DATA_DIR`, or `DATA_ARCHIVE` when using a different source or local fixture.
 - Submit the DAG: Copy the Python DAG file to the Airflow dags directory.
 - Unpause and Trigger: Access the Airflow UI, unpause the new DAG, and manually trigger its execution.
 - Scheduling: The DAG runs daily, does not backfill historical dates when it is unpaused, and allows only one active run at a time.
