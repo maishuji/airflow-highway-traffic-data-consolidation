@@ -31,6 +31,7 @@ dag = DAG(
     description='A DAG for ETL processing of toll data',
     schedule="@daily",  # Run once every day
     catchup=False,
+    max_active_runs=1,
 )
 
 

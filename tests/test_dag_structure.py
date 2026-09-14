@@ -66,6 +66,22 @@ class DagStructureTest(unittest.TestCase):
         self.assertIsInstance(catchup, ast.Constant)
         self.assertFalse(catchup.value)
 
+    def test_dag_serializes_active_runs(self):
+        dag_calls = [
+            node
+            for node in ast.walk(self.tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "DAG"
+        ]
+        max_active_runs = next(
+            keyword.value
+            for keyword in dag_calls[0].keywords
+            if keyword.arg == "max_active_runs"
+        )
+        self.assertIsInstance(max_active_runs, ast.Constant)
+        self.assertEqual(max_active_runs.value, 1)
+
     def test_pipeline_ends_with_load(self):
         self.assertIn(
             "unzip_data >> validate_input_data >> [",

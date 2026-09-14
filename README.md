@@ -64,7 +64,7 @@ unzip_data -> validate_input_data -> [extract_data_from_csv, extract_data_from_t
 
 - Submit the DAG: Copy the Python DAG file to the Airflow dags directory.
 - Unpause and Trigger: Access the Airflow UI, unpause the new DAG, and manually trigger its execution.
-- Scheduling: The DAG runs daily and does not backfill historical dates when it is unpaused.
+- Scheduling: The DAG runs daily, does not backfill historical dates when it is unpaused, and allows only one active run at a time.
 - Validate locally: Run `make test` to check the DAG structure without requiring a live Airflow scheduler.
 - Monitor the DAG: Use the Airflow UI to monitor the progress of the DAG, observing the status of each task in - the graphical view.
 - List Tasks: Use the Airflow CLI command to list all tasks associated with the DAG.
