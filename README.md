@@ -6,6 +6,7 @@ This project implements an Extract, Transform, and Load (ETL) pipeline using Apa
 ### Technologies Used
 
 - Apache Airflow: The primary orchestration tool for scheduling and managing the ETL workflow.
+- uv: Used to resolve, lock, and synchronize Python dependencies.
 - Python: Used for scripting the data extraction and transformation logic.
 - Bash: Utilized via Airflow's BashOperator to execute shell commands for tasks like unzipping and data manipulation.
 
@@ -66,7 +67,7 @@ unzip_data -> validate_input_data -> [extract_data_from_csv, extract_data_from_t
 ### How to Run the Project
 
 - Prepare data: Run `make extract-data`. Override `DATA_URL`, `DATA_DIR`, or `DATA_ARCHIVE` when using a different source or local fixture. Set `DATA_SHA256=<checksum>` with `make get-data` to verify the downloaded archive.
-- Create the environment: Run `make create-venv`. Airflow is installed with the matching Python-version constraints; override `AIRFLOW_CONSTRAINTS_URL` when using a mirror or a locally cached constraints file.
+- Create the environment: Run `make sync`. This uses the committed `uv.lock` file to create or synchronize `.venv`.
 - Submit the DAG: Copy the Python DAG file to the Airflow dags directory.
 - Unpause and Trigger: Access the Airflow UI, unpause the new DAG, and manually trigger its execution.
 - Scheduling: The DAG runs daily, does not backfill historical dates when it is unpaused, and allows only one active run at a time.
@@ -78,9 +79,9 @@ unzip_data -> validate_input_data -> [extract_data_from_csv, extract_data_from_t
 
 - If the archive is missing, run `make extract-data` or provide a local `DATA_URL`/`DATA_ARCHIVE`.
 - If `make check` fails, fix the reported fixture or DAG validation error before submitting the DAG to Airflow.
-- If Airflow cannot import the DAG, confirm that the virtual environment was created with `make create-venv` and that the DAG is copied into the configured Airflow `dags` directory.
+- If Airflow cannot import the DAG, run `make sync` and confirm that the DAG is copied into the configured Airflow `dags` directory.
 
-Airflow 3.0.6 supports Python 3.9–3.12. The Makefile selects the matching constraints file for the active Python version; use a supported interpreter when creating the virtual environment.
+Airflow 3.0.6 supports Python 3.9–3.12. The project metadata enforces that supported range; use a compatible interpreter when running `make sync`.
 
 ## Grading Criteria
 

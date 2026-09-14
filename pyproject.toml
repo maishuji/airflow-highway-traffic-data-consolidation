@@ -1,0 +1,12 @@
+[project]
+name = "airflow-highway-traffic-data-consolidation"
+version = "0.1.0"
+description = "An Apache Airflow ETL pipeline for consolidating highway toll data."
+readme = "README.md"
+requires-python = ">=3.9,<3.13"
+dependencies = [
+    "apache-airflow==3.0.6",
+]
+
+[tool.uv]
+package = false

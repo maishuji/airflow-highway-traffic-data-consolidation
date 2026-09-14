@@ -1,4 +1,5 @@
 venv/
+.venv/
 .private/
 **/*.csv
 **/*.tsv
