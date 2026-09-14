@@ -183,10 +183,12 @@ load_data = BashOperator(
       SOURCE_FILE=./staging/transformed_data.csv
       FINAL_DIR=./staging/final
       FINAL_FILE="$FINAL_DIR/transformed_data.csv"
+      TEMP_FILE="$FINAL_FILE.tmp"
 
       test -s "$SOURCE_FILE"
       mkdir -p "$FINAL_DIR"
-      cp "$SOURCE_FILE" "$FINAL_FILE"
+      cp "$SOURCE_FILE" "$TEMP_FILE"
+      mv -- "$TEMP_FILE" "$FINAL_FILE"
 
       echo "Loaded $FINAL_FILE"
     """,

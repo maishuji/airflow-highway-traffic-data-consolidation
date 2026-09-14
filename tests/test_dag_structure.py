@@ -111,6 +111,11 @@ class DagStructureTest(unittest.TestCase):
         self.assertIn('"{WORK_DIR}/payment-data.txt"', self.source)
         self.assertIn('[[ ! -s "$source_file" ]]', self.source)
 
+    def test_load_uses_atomic_replace(self):
+        self.assertIn('TEMP_FILE="$FINAL_FILE.tmp"', self.source)
+        self.assertIn('cp "$SOURCE_FILE" "$TEMP_FILE"', self.source)
+        self.assertIn('mv -- "$TEMP_FILE" "$FINAL_FILE"', self.source)
+
     def test_fixed_width_contract_is_encoded(self):
         self.assertIn("substr($0, 1, 10)", self.source)
         self.assertIn("substr($0, 11, 10)", self.source)
