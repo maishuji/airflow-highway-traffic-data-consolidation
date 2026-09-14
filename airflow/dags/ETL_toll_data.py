@@ -74,9 +74,14 @@ extract_data_from_fixed_width = BashOperator(
     cwd=str(DAGS_DIR),  # run relative to your DAGs folder
     bash_command=f"""
       set -euo pipefail
-      awk '{{print $(NF-1) "," $NF}}' {DAGS_DIR}/data/payment-data.txt \
-        > {DAGS_DIR}/data/fixed_width_data.csv
-      echo "Wrote {DAGS_DIR}/data/fixed_width_data.csv"
+      awk '
+        function trim(value) {{
+          gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+          return value
+        }}
+        {{ print trim(substr($0, 1, 10)) "," trim(substr($0, 11, 10)) }}
+      ' {WORK_DIR}/payment-data.txt > ./data/fixed_width_data.csv
+      echo "Wrote ./data/fixed_width_data.csv"
     """,
     dag=dag,
 )
