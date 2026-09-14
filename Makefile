@@ -23,3 +23,6 @@ create-venv:
 
 test:
 	python3 -m unittest discover -s tests -p 'test_*.py'
+
+check: test
+	python3 -c 'import ast; from pathlib import Path; ast.parse(Path("airflow/dags/ETL_toll_data.py").read_text(encoding="utf-8")); print("DAG syntax: OK")'
