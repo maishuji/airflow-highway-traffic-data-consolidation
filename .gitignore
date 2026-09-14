@@ -6,5 +6,6 @@ venv/
 **/*.tgz
 **/*.tgz.*
 **/*.log
+**/*.tmp
 **/__pycache__/
 **/*.pyc
