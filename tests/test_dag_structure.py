@@ -38,6 +38,7 @@ class DagStructureTest(unittest.TestCase):
             task_ids,
             [
                 "unzip_data",
+                "validate_input_data",
                 "extract_data_from_csv",
                 "extract_data_from_tsv",
                 "extract_data_from_fixed_width",
@@ -66,9 +67,19 @@ class DagStructureTest(unittest.TestCase):
 
     def test_pipeline_ends_with_load(self):
         self.assertIn(
+            "unzip_data >> validate_input_data >> [",
+            self.source,
+        )
+        self.assertIn(
             "consolidate_data >> transform_data >> load_data",
             self.source,
         )
+
+    def test_input_validation_checks_all_sources(self):
+        self.assertIn('"{WORK_DIR}/vehicle-data.csv"', self.source)
+        self.assertIn('"{WORK_DIR}/tollplaza-data.tsv"', self.source)
+        self.assertIn('"{WORK_DIR}/payment-data.txt"', self.source)
+        self.assertIn('[[ ! -s "$source_file" ]]', self.source)
 
     def test_fixed_width_contract_is_encoded(self):
         self.assertIn("substr($0, 1, 10)", self.source)

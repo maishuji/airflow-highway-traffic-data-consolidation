@@ -35,6 +35,7 @@ The Apache Airflow Directed Acyclic Graph (DAG) for this project is structured t
 - Task 1.1: Define a set of default arguments for the DAG, including the owner, start date, and retry settings.
 - Task 1.2: Instantiate the DAG with a unique ID and schedule.
 - Task 2.1: Unzip the raw data archive to prepare the source files for extraction.
+- Task 2.1.1: Validate that all required source files exist and are non-empty.
 
 #### 2. Extract
 
@@ -57,7 +58,7 @@ This phase involves extracting data from three different file formats into a sin
 
 The DAG's task pipeline defines the flow of the ETL process, ensuring that tasks are executed in the correct order. The flow is as follows:
 
-unzip_data_task -> extract_from_csv -> extract_from_tsv -> extract_from_fixed_width -> consolidate_data_task -> transform_data_task -> load_data_task
+unzip_data -> validate_input_data -> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] -> consolidate_data -> transform_data -> load_data
 ### How to Run the Project
 
 - Submit the DAG: Copy the Python DAG file to the Airflow dags directory.

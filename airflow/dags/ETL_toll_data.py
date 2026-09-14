@@ -51,6 +51,24 @@ unzip_data = BashOperator(
     cwd=str(DAGS_DIR)
 )
 
+validate_input_data = BashOperator(
+    task_id="validate_input_data",
+    bash_command=f"""
+      set -euo pipefail
+      for source_file in \
+        "{WORK_DIR}/vehicle-data.csv" \
+        "{WORK_DIR}/tollplaza-data.tsv" \
+        "{WORK_DIR}/payment-data.txt"; do
+        if [[ ! -s "$source_file" ]]; then
+          echo "Missing or empty input: $source_file" >&2
+          exit 1
+        fi
+      done
+    """,
+    dag=dag,
+    cwd=str(DAGS_DIR)
+)
+
 extract_data_from_csv = BashOperator(
     task_id='extract_data_from_csv',
     bash_command='cut -d"," -f1,2,3,4 '
@@ -139,4 +157,4 @@ load_data = BashOperator(
 )
 
 
-unzip_data >> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] >> consolidate_data >> transform_data >> load_data
+unzip_data >> validate_input_data >> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] >> consolidate_data >> transform_data >> load_data
