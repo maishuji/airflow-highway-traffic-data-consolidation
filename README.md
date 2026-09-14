@@ -6,6 +6,7 @@ This project implements an Extract, Transform, and Load (ETL) pipeline using Apa
 ### Technologies Used
 
 - Apache Airflow: The primary orchestration tool for scheduling and managing the ETL workflow.
+- Docker Compose: Provides a reproducible local Airflow environment with PostgreSQL.
 - uv: Used to resolve, lock, and synchronize Python dependencies.
 - Python: Used for scripting the data extraction and transformation logic.
 - Bash: Utilized via Airflow's BashOperator to execute shell commands for tasks like unzipping and data manipulation.
@@ -68,18 +69,24 @@ unzip_data -> validate_input_data -> [extract_data_from_csv, extract_data_from_t
 
 - Prepare data: Run `make extract-data`. Override `DATA_URL`, `DATA_DIR`, or `DATA_ARCHIVE` when using a different source or local fixture. Set `DATA_SHA256=<checksum>` with `make get-data` to verify the downloaded archive.
 - Create the environment: Run `make sync`. This uses the committed `uv.lock` file to create or synchronize `.venv`.
-- Submit the DAG: Copy the Python DAG file to the Airflow dags directory.
-- Unpause and Trigger: Access the Airflow UI, unpause the new DAG, and manually trigger its execution.
+- Configure Compose: Copy `.env.example` to `.env` and change the local admin username and API JWT secret if needed. The checked-in default secret is for local development only.
+- Initialize Airflow: Run `make compose-init` to create the metadata database.
+- Start Airflow: Run `make compose-up`, then open `http://localhost:8080`. Airflow 3 generates the simple-auth password on first start; read it with `docker compose logs airflow-api-server`.
+- Submit the DAG: The Compose services mount `airflow/dags` into the Airflow containers automatically.
+- Unpause and Trigger: Access the Airflow UI, unpause the `ETL_toll_data` DAG, and manually trigger its execution.
 - Scheduling: The DAG runs daily, does not backfill historical dates when it is unpaused, and allows only one active run at a time.
 - Validate locally: Run `make check` to run the fixture tests and parse the DAG without requiring a live Airflow scheduler.
 - Monitor the DAG: Use the Airflow UI to monitor the progress of each task in the graphical view.
 - List Tasks: Use the Airflow CLI command to list all tasks associated with the DAG.
+- Stop Airflow: Run `make compose-down` to stop the services while preserving the PostgreSQL volume.
 
 ### Troubleshooting
 
 - If the archive is missing, run `make extract-data` or provide a local `DATA_URL`/`DATA_ARCHIVE`.
 - If `make check` fails, fix the reported fixture or DAG validation error before submitting the DAG to Airflow.
-- If Airflow cannot import the DAG, run `make sync` and confirm that the DAG is copied into the configured Airflow `dags` directory.
+- If Airflow cannot import the DAG, confirm that the Compose services are running and that `airflow/dags/ETL_toll_data.py` exists on the host.
+- If the UI port is busy, set `AIRFLOW_API_PORT` in `.env` and open the corresponding port instead.
+- If a clean local reset is needed, run `docker compose down --volumes` to remove the PostgreSQL metadata and Airflow home volumes, then repeat `make compose-init`. This removes local Airflow history and the generated login password.
 
 Airflow 3.0.6 supports Python 3.9–3.12. The project metadata enforces that supported range; use a compatible interpreter when running `make sync`.
 

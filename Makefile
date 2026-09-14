@@ -21,3 +21,19 @@ test:
 
 check: test
 	uv run --locked python -c 'import ast; from pathlib import Path; ast.parse(Path("airflow/dags/ETL_toll_data.py").read_text(encoding="utf-8")); print("DAG syntax: OK")'
+
+compose-config:
+	docker compose config --quiet
+
+compose-init: compose-config
+	mkdir -p airflow/logs airflow/plugins
+	docker compose up airflow-init
+
+compose-up: compose-init
+	docker compose up -d
+
+compose-down:
+	docker compose down
+
+compose-logs:
+	docker compose logs -f airflow-api-server
