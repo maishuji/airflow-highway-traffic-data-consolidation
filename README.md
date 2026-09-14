@@ -19,7 +19,7 @@ The input archive is expected to contain three source files. The extraction stag
 | `tollplaza-data.tsv` | Tab-separated fields 5–7 | `number_of_axles`, `tollplaza_id`, `tollplaza_code` |
 | `payment-data.txt` | Fixed-width characters 1–10 and 11–20 | `payment_type_code`, `vehicle_code` |
 
-Fixed-width positions are one-based and inclusive. The normalized output is therefore nine fields per source row: four CSV fields, three TSV fields, and two payment fields. The fixture is expected to keep corresponding records aligned by row for the consolidation step. The DAG rejects empty consolidated output and rows that do not contain exactly nine fields.
+Fixed-width positions are one-based and inclusive. The normalized output is therefore nine fields per source row: four CSV fields, three TSV fields, and two payment fields. The fixture is expected to keep corresponding records aligned by row for the consolidation step. The DAG checks that all three extracted files have the same number of rows, then rejects empty consolidated output and rows that do not contain exactly nine fields.
 
 The transformation contract for this assignment is to uppercase `vehicle_type`. Numeric rounding is not part of the source-file contract because the selected source fields do not define `vehicle_count` or `toll_amount`; any future numeric transformation must first add an explicit schema mapping and tests.
 

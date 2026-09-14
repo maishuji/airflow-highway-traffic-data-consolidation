@@ -115,11 +115,23 @@ extract_data_from_fixed_width = BashOperator(
 
 consolidate_data = BashOperator(
     task_id='consolidate_data',
-    bash_command='paste -d"," '
-                 './data/csv_data.csv '
-                 './data/tsv_data.csv '
-                 './data/fixed_width_data.csv '
-                 '> ./data/extracted_data.csv',
+    bash_command="""
+      set -euo pipefail
+      csv_rows=$(wc -l < ./data/csv_data.csv)
+      tsv_rows=$(wc -l < ./data/tsv_data.csv)
+      fixed_width_rows=$(wc -l < ./data/fixed_width_data.csv)
+
+      if [[ "$csv_rows" -ne "$tsv_rows" || "$csv_rows" -ne "$fixed_width_rows" ]]; then
+        echo "Input row counts do not match: csv=$csv_rows, tsv=$tsv_rows, fixed_width=$fixed_width_rows" >&2
+        exit 1
+      fi
+
+      paste -d',' \
+        ./data/csv_data.csv \
+        ./data/tsv_data.csv \
+        ./data/fixed_width_data.csv \
+        > ./data/extracted_data.csv
+    """,
     dag=dag,
     cwd=str(DAGS_DIR)
 )

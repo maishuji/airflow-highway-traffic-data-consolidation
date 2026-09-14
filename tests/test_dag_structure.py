@@ -80,6 +80,15 @@ class DagStructureTest(unittest.TestCase):
         self.assertIn("NF != 9", self.source)
         self.assertIn("if (NR == 0)", self.source)
 
+    def test_consolidation_requires_aligned_input_rows(self):
+        self.assertIn("csv_rows=$(wc -l < ./data/csv_data.csv)", self.source)
+        self.assertIn("tsv_rows=$(wc -l < ./data/tsv_data.csv)", self.source)
+        self.assertIn(
+            "fixed_width_rows=$(wc -l < ./data/fixed_width_data.csv)",
+            self.source,
+        )
+        self.assertIn("Input row counts do not match", self.source)
+
     def test_input_validation_checks_all_sources(self):
         self.assertIn('"{WORK_DIR}/vehicle-data.csv"', self.source)
         self.assertIn('"{WORK_DIR}/tollplaza-data.tsv"', self.source)
