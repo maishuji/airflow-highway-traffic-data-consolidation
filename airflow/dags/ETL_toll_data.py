@@ -99,7 +99,7 @@ transform_data = BashOperator(
       set -euo pipefail
       DATA_DIR=./data
       STAGING_DIR=./staging
-      mkdir -p "$STAGING_DIR"s
+      mkdir -p "$STAGING_DIR"
 
       # uppercase the 4th field (vehicle_type)
       awk -F',' 'BEGIN{OFS=","} {$4=toupper($4); print}' "$DATA_DIR/extracted_data.csv" > "$STAGING_DIR/transformed_data.csv"
