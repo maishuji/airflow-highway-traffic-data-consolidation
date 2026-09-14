@@ -175,6 +175,31 @@ transform_data = BashOperator(
     dag=dag,
 )
 
+validate_transformed_data = BashOperator(
+    task_id="validate_transformed_data",
+    cwd=str(DAGS_DIR),
+    bash_command="""
+      set -euo pipefail
+      awk -F',' '
+        NF != 9 {
+          printf "Expected 9 transformed fields on row %d, found %d\n", NR, NF > "/dev/stderr"
+          exit 1
+        }
+        $2 != toupper($2) {
+          printf "vehicle_type is not uppercase on row %d\n", NR > "/dev/stderr"
+          exit 1
+        }
+        END {
+          if (NR == 0) {
+            print "Transformed data is empty" > "/dev/stderr"
+            exit 1
+          }
+        }
+      ' ./staging/transformed_data.csv
+    """,
+    dag=dag,
+)
+
 load_data = BashOperator(
     task_id="load_data",
     cwd=str(DAGS_DIR),
@@ -196,4 +221,4 @@ load_data = BashOperator(
 )
 
 
-unzip_data >> validate_input_data >> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] >> consolidate_data >> validate_consolidated_data >> transform_data >> load_data
+unzip_data >> validate_input_data >> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] >> consolidate_data >> validate_consolidated_data >> transform_data >> validate_transformed_data >> load_data

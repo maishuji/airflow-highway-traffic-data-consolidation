@@ -50,6 +50,7 @@ This phase involves extracting data from three different file formats into a sin
 #### 3. Transform
 
 - Task 2.6: Transform the consolidated data by uppercasing the `vehicle_type` field.
+- Task 2.6.1: Validate that the transformed output is non-empty, has nine fields per row, and contains an uppercase `vehicle_type`.
 
 #### 4. Load
 
@@ -59,7 +60,7 @@ This phase involves extracting data from three different file formats into a sin
 
 The DAG's task pipeline defines the flow of the ETL process, ensuring that tasks are executed in the correct order. The flow is as follows:
 
-unzip_data -> validate_input_data -> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] -> consolidate_data -> validate_consolidated_data -> transform_data -> load_data
+unzip_data -> validate_input_data -> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] -> consolidate_data -> validate_consolidated_data -> transform_data -> validate_transformed_data -> load_data
 ### How to Run the Project
 
 - Prepare data: Run `make extract-data`. Override `DATA_URL`, `DATA_DIR`, or `DATA_ARCHIVE` when using a different source or local fixture. Set `DATA_SHA256=<checksum>` with `make get-data` to verify the downloaded archive.

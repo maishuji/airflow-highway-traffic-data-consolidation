@@ -45,6 +45,7 @@ class DagStructureTest(unittest.TestCase):
                 "consolidate_data",
                 "validate_consolidated_data",
                 "transform_data",
+                "validate_transformed_data",
                 "load_data",
             ],
         )
@@ -88,7 +89,7 @@ class DagStructureTest(unittest.TestCase):
             self.source,
         )
         self.assertIn(
-            "consolidate_data >> validate_consolidated_data >> transform_data >> load_data",
+            "consolidate_data >> validate_consolidated_data >> transform_data >> validate_transformed_data >> load_data",
             self.source,
         )
 
@@ -115,6 +116,11 @@ class DagStructureTest(unittest.TestCase):
         self.assertIn('TEMP_FILE="$FINAL_FILE.tmp"', self.source)
         self.assertIn('cp "$SOURCE_FILE" "$TEMP_FILE"', self.source)
         self.assertIn('mv -- "$TEMP_FILE" "$FINAL_FILE"', self.source)
+
+    def test_transformed_output_is_validated(self):
+        self.assertIn("$2 != toupper($2)", self.source)
+        self.assertIn("Expected 9 transformed fields", self.source)
+        self.assertIn("Transformed data is empty", self.source)
 
     def test_fixed_width_contract_is_encoded(self):
         self.assertIn("substr($0, 1, 10)", self.source)
