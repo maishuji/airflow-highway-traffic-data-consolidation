@@ -31,6 +31,10 @@ make check
 
 Stop the local stack with `make compose-down`.
 
+## Continuous integration
+
+GitHub Actions validates the locked uv environment and runs the test suite and DAG syntax check against Python 3.9–3.12. A separate job validates the Docker Compose configuration on every push and pull request.
+
 ## Technologies used
 
 - Apache Airflow: The primary orchestration tool for scheduling and managing the ETL workflow.
