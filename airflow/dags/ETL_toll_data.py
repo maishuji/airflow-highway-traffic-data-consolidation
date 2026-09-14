@@ -121,6 +121,27 @@ consolidate_data = BashOperator(
     cwd=str(DAGS_DIR)
 )
 
+validate_consolidated_data = BashOperator(
+    task_id="validate_consolidated_data",
+    cwd=str(DAGS_DIR),
+    bash_command="""
+      set -euo pipefail
+      awk -F',' '
+        NF != 9 {
+          printf "Expected 9 fields on row %d, found %d\n", NR, NF > "/dev/stderr"
+          exit 1
+        }
+        END {
+          if (NR == 0) {
+            print "Consolidated data is empty" > "/dev/stderr"
+            exit 1
+          }
+        }
+      ' ./data/extracted_data.csv
+    """,
+    dag=dag,
+)
+
 transform_data = BashOperator(
     task_id="transform_data",
     cwd=str(DAGS_DIR),
@@ -157,4 +178,4 @@ load_data = BashOperator(
 )
 
 
-unzip_data >> validate_input_data >> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] >> consolidate_data >> transform_data >> load_data
+unzip_data >> validate_input_data >> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] >> consolidate_data >> validate_consolidated_data >> transform_data >> load_data

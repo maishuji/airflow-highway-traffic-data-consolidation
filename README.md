@@ -19,7 +19,7 @@ The input archive is expected to contain three source files. The extraction stag
 | `tollplaza-data.tsv` | Tab-separated fields 5–7 | `number_of_axles`, `tollplaza_id`, `tollplaza_code` |
 | `payment-data.txt` | Fixed-width characters 1–10 and 11–20 | `payment_type_code`, `vehicle_code` |
 
-Fixed-width positions are one-based and inclusive. The normalized output is therefore nine fields per source row: four CSV fields, three TSV fields, and two payment fields. The fixture is expected to keep corresponding records aligned by row for the consolidation step.
+Fixed-width positions are one-based and inclusive. The normalized output is therefore nine fields per source row: four CSV fields, three TSV fields, and two payment fields. The fixture is expected to keep corresponding records aligned by row for the consolidation step. The DAG rejects empty consolidated output and rows that do not contain exactly nine fields.
 
 The transformation contract for this assignment is to uppercase `vehicle_type`. Numeric rounding is not part of the source-file contract because the selected source fields do not define `vehicle_count` or `toll_amount`; any future numeric transformation must first add an explicit schema mapping and tests.
 
@@ -45,6 +45,7 @@ This phase involves extracting data from three different file formats into a sin
 - Task 2.3: Extract data from the tollplaza_data.tsv file.
 - Task 2.4: Extract data from a fixed-width file (payment-data.txt).
 - Task 2.5: Consolidate the data extracted from the CSV, TSV, and fixed-width files into a single extracted_data.txt file.
+- Task 2.5.1: Validate that the consolidated output is non-empty and has nine fields per row.
 
 #### 3. Transform
 
@@ -58,7 +59,7 @@ This phase involves extracting data from three different file formats into a sin
 
 The DAG's task pipeline defines the flow of the ETL process, ensuring that tasks are executed in the correct order. The flow is as follows:
 
-unzip_data -> validate_input_data -> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] -> consolidate_data -> transform_data -> load_data
+unzip_data -> validate_input_data -> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] -> consolidate_data -> validate_consolidated_data -> transform_data -> load_data
 ### How to Run the Project
 
 - Submit the DAG: Copy the Python DAG file to the Airflow dags directory.

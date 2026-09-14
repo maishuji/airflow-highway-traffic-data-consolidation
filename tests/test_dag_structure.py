@@ -43,6 +43,7 @@ class DagStructureTest(unittest.TestCase):
                 "extract_data_from_tsv",
                 "extract_data_from_fixed_width",
                 "consolidate_data",
+                "validate_consolidated_data",
                 "transform_data",
                 "load_data",
             ],
@@ -71,9 +72,13 @@ class DagStructureTest(unittest.TestCase):
             self.source,
         )
         self.assertIn(
-            "consolidate_data >> transform_data >> load_data",
+            "consolidate_data >> validate_consolidated_data >> transform_data >> load_data",
             self.source,
         )
+
+    def test_consolidated_output_requires_nine_non_empty_fields(self):
+        self.assertIn("NF != 9", self.source)
+        self.assertIn("if (NR == 0)", self.source)
 
     def test_input_validation_checks_all_sources(self):
         self.assertIn('"{WORK_DIR}/vehicle-data.csv"', self.source)
