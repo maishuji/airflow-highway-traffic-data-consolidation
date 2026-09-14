@@ -106,8 +106,8 @@ transform_data = BashOperator(
       STAGING_DIR=./staging
       mkdir -p "$STAGING_DIR"
 
-      # uppercase the 4th field (vehicle_type)
-      awk -F',' 'BEGIN{OFS=","} {$4=toupper($4); print}' "$DATA_DIR/extracted_data.csv" > "$STAGING_DIR/transformed_data.csv"
+      # uppercase the 2nd field (vehicle_type)
+      awk -F',' 'BEGIN{OFS=","} {$2=toupper($2); print}' "$DATA_DIR/extracted_data.csv" > "$STAGING_DIR/transformed_data.csv"
 
       echo "Wrote $STAGING_DIR/transformed_data.csv"
     """,
