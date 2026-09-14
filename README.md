@@ -25,6 +25,8 @@ The transformation contract for this assignment is to uppercase `vehicle_type`. 
 
 The intermediate transformed file is written to `airflow/dags/staging/transformed_data.csv`. The load stage validates that file and copies it to the final staging output at `airflow/dags/staging/final/transformed_data.csv`.
 
+Each Airflow run extracts into its own temporary work directory. At the start of a run, only generated intermediate files and the project staging directory are removed; the downloaded archive at `airflow/dags/data/tolldata.tgz` is preserved.
+
 ### ETL Pipeline Tasks
 
 The Apache Airflow Directed Acyclic Graph (DAG) for this project is structured to perform the following tasks sequentially.
