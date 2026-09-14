@@ -64,6 +64,7 @@ unzip_data -> validate_input_data -> [extract_data_from_csv, extract_data_from_t
 ### How to Run the Project
 
 - Prepare data: Run `make extract-data`. Override `DATA_URL`, `DATA_DIR`, or `DATA_ARCHIVE` when using a different source or local fixture. Set `DATA_SHA256=<checksum>` with `make get-data` to verify the downloaded archive.
+- Create the environment: Run `make create-venv`. Airflow is installed with the matching Python-version constraints; override `AIRFLOW_CONSTRAINTS_URL` when using a mirror or a locally cached constraints file.
 - Submit the DAG: Copy the Python DAG file to the Airflow dags directory.
 - Unpause and Trigger: Access the Airflow UI, unpause the new DAG, and manually trigger its execution.
 - Scheduling: The DAG runs daily, does not backfill historical dates when it is unpaused, and allows only one active run at a time.
