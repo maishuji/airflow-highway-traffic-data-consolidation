@@ -71,9 +71,12 @@ validate_input_data = BashOperator(
 
 extract_data_from_csv = BashOperator(
     task_id='extract_data_from_csv',
-    bash_command='cut -d"," -f1,2,3,4 '
-                 f'{WORK_DIR}/vehicle-data.csv '
-                 '> ./data/csv_data.csv',
+    bash_command=f"""
+      set -euo pipefail
+      cut -d',' -f1-4 "{WORK_DIR}/vehicle-data.csv" > ./data/csv_data.csv
+      sed -i 's/\\r$//' ./data/csv_data.csv
+      echo "Wrote ./data/csv_data.csv (normalized to LF)"
+    """,
     dag=dag,
     cwd=str(DAGS_DIR)
 )
@@ -84,7 +87,7 @@ extract_data_from_tsv = BashOperator(
     bash_command=f"""
       set -euo pipefail
       # extract cols 5–7, turn tabs into commas
-      cut -f5,6,7 {WORK_DIR}/tollplaza-data.tsv | tr '\\t' ',' > ./data/tsv_data.csv
+      cut -f5-7 "{WORK_DIR}/tollplaza-data.tsv" | tr '\\t' ',' > ./data/tsv_data.csv
       # normalize CRLF -> LF
       sed -i 's/\\r$//' ./data/tsv_data.csv
       echo "Wrote ./data/tsv_data.csv (normalized to LF)"
