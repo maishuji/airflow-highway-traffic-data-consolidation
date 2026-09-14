@@ -1,6 +1,8 @@
 ## How to reset the password ( airflow 3.x.x)
 If you need to reset the default admin password for your Airflow instance, follow these steps:
 
+> **Warning:** `airflow db reset -y` deletes the Airflow metadata database, including DAG run history, task state, connections, variables, and other metadata. Use this procedure only for a disposable development environment. Back up or recreate the environment before using it against shared or production metadata.
+
 ```
 # 1. Set your Airflow home directory
 export AIRFLOW_HOME=<your_airflow_home>
