@@ -114,5 +114,23 @@ transform_data = BashOperator(
     dag=dag,
 )
 
+load_data = BashOperator(
+    task_id="load_data",
+    cwd=str(DAGS_DIR),
+    bash_command="""
+      set -euo pipefail
+      SOURCE_FILE=./staging/transformed_data.csv
+      FINAL_DIR=./staging/final
+      FINAL_FILE="$FINAL_DIR/transformed_data.csv"
 
-unzip_data >> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] >> consolidate_data >> transform_data
+      test -s "$SOURCE_FILE"
+      mkdir -p "$FINAL_DIR"
+      cp "$SOURCE_FILE" "$FINAL_FILE"
+
+      echo "Loaded $FINAL_FILE"
+    """,
+    dag=dag,
+)
+
+
+unzip_data >> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] >> consolidate_data >> transform_data >> load_data

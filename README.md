@@ -23,6 +23,8 @@ Fixed-width positions are one-based and inclusive. The normalized output is ther
 
 The transformation contract for this assignment is to uppercase `vehicle_type`. Numeric rounding is not part of the source-file contract because the selected source fields do not define `vehicle_count` or `toll_amount`; any future numeric transformation must first add an explicit schema mapping and tests.
 
+The intermediate transformed file is written to `airflow/dags/staging/transformed_data.csv`. The load stage validates that file and copies it to the final staging output at `airflow/dags/staging/final/transformed_data.csv`.
+
 ### ETL Pipeline Tasks
 
 The Apache Airflow Directed Acyclic Graph (DAG) for this project is structured to perform the following tasks sequentially.
