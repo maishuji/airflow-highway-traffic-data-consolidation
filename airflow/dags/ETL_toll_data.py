@@ -38,13 +38,6 @@ unzip_data = BashOperator(
     cwd=str(DAGS_DIR)
 )
 
-cur_dir = BashOperator(
-    task_id='current_dir',
-    bash_command='pwd >> log1.txt',
-    dag=dag,
-    cwd=str(DAGS_DIR)
-)
-
 extract_data_from_csv = BashOperator(
     task_id='extract_data_from_csv',
     bash_command='cut -d"," -f1,2,3,4 '
