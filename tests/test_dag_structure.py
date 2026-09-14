@@ -1,0 +1,131 @@
+import ast
+import unittest
+from pathlib import Path
+
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+DAG_PATH = REPOSITORY_ROOT / "airflow" / "dags" / "ETL_toll_data.py"
+
+
+class DagStructureTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.source = DAG_PATH.read_text(encoding="utf-8")
+        cls.tree = ast.parse(cls.source, filename=str(DAG_PATH))
+
+    def test_expected_tasks_are_declared(self):
+        task_ids = []
+        for node in ast.walk(self.tree):
+            if not (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "BashOperator"
+            ):
+                continue
+            task_id = next(
+                (
+                    keyword.value.value
+                    for keyword in node.keywords
+                    if keyword.arg == "task_id"
+                    and isinstance(keyword.value, ast.Constant)
+                ),
+                None,
+            )
+            if task_id is not None:
+                task_ids.append(task_id)
+
+        self.assertEqual(
+            task_ids,
+            [
+                "unzip_data",
+                "validate_input_data",
+                "extract_data_from_csv",
+                "extract_data_from_tsv",
+                "extract_data_from_fixed_width",
+                "consolidate_data",
+                "validate_consolidated_data",
+                "transform_data",
+                "validate_transformed_data",
+                "load_data",
+            ],
+        )
+
+    def test_dag_disables_historical_backfill(self):
+        dag_calls = [
+            node
+            for node in ast.walk(self.tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "DAG"
+        ]
+        self.assertEqual(len(dag_calls), 1)
+        catchup = next(
+            keyword.value
+            for keyword in dag_calls[0].keywords
+            if keyword.arg == "catchup"
+        )
+        self.assertIsInstance(catchup, ast.Constant)
+        self.assertFalse(catchup.value)
+
+    def test_dag_serializes_active_runs(self):
+        dag_calls = [
+            node
+            for node in ast.walk(self.tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "DAG"
+        ]
+        max_active_runs = next(
+            keyword.value
+            for keyword in dag_calls[0].keywords
+            if keyword.arg == "max_active_runs"
+        )
+        self.assertIsInstance(max_active_runs, ast.Constant)
+        self.assertEqual(max_active_runs.value, 1)
+
+    def test_pipeline_ends_with_load(self):
+        self.assertIn(
+            "unzip_data >> validate_input_data >> [",
+            self.source,
+        )
+        self.assertIn(
+            "consolidate_data >> validate_consolidated_data >> transform_data >> validate_transformed_data >> load_data",
+            self.source,
+        )
+
+    def test_consolidated_output_requires_nine_non_empty_fields(self):
+        self.assertIn("NF != 9", self.source)
+        self.assertIn("if (NR == 0)", self.source)
+
+    def test_consolidation_requires_aligned_input_rows(self):
+        self.assertIn("csv_rows=$(wc -l < ./data/csv_data.csv)", self.source)
+        self.assertIn("tsv_rows=$(wc -l < ./data/tsv_data.csv)", self.source)
+        self.assertIn(
+            "fixed_width_rows=$(wc -l < ./data/fixed_width_data.csv)",
+            self.source,
+        )
+        self.assertIn("Input row counts do not match", self.source)
+
+    def test_input_validation_checks_all_sources(self):
+        self.assertIn('"{WORK_DIR}/vehicle-data.csv"', self.source)
+        self.assertIn('"{WORK_DIR}/tollplaza-data.tsv"', self.source)
+        self.assertIn('"{WORK_DIR}/payment-data.txt"', self.source)
+        self.assertIn('[[ ! -s "$source_file" ]]', self.source)
+
+    def test_load_uses_atomic_replace(self):
+        self.assertIn('TEMP_FILE="$FINAL_FILE.tmp"', self.source)
+        self.assertIn('cp "$SOURCE_FILE" "$TEMP_FILE"', self.source)
+        self.assertIn('mv -- "$TEMP_FILE" "$FINAL_FILE"', self.source)
+
+    def test_transformed_output_is_validated(self):
+        self.assertIn("$2 != toupper($2)", self.source)
+        self.assertIn("Expected 9 transformed fields", self.source)
+        self.assertIn("Transformed data is empty", self.source)
+
+    def test_fixed_width_contract_is_encoded(self):
+        self.assertIn("substr($0, 1, 10)", self.source)
+        self.assertIn("substr($0, 11, 10)", self.source)
+
+
+if __name__ == "__main__":
+    unittest.main()

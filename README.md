@@ -9,27 +9,50 @@ This project implements an Extract, Transform, and Load (ETL) pipeline using Apa
 - Python: Used for scripting the data extraction and transformation logic.
 - Bash: Utilized via Airflow's BashOperator to execute shell commands for tasks like unzipping and data manipulation.
 
+### Data contract
+
+The input archive is expected to contain three source files. The extraction stage keeps the selected fields in source order and consolidates them into one comma-separated row:
+
+| Source | Format and selected positions | Normalized fields |
+| --- | --- | --- |
+| `vehicle-data.csv` | Comma-separated fields 1–4 | `vehicle_id`, `vehicle_type`, `vehicle_number`, `tollplaza_id` |
+| `tollplaza-data.tsv` | Tab-separated fields 5–7 | `number_of_axles`, `tollplaza_id`, `tollplaza_code` |
+| `payment-data.txt` | Fixed-width characters 1–10 and 11–20 | `payment_type_code`, `vehicle_code` |
+
+Fixed-width positions are one-based and inclusive. The normalized output is therefore nine fields per source row: four CSV fields, three TSV fields, and two payment fields. The fixture is expected to keep corresponding records aligned by row for the consolidation step. The DAG checks that all three extracted files have the same number of rows, then rejects empty consolidated output and rows that do not contain exactly nine fields.
+
+The transformation contract for this assignment is to uppercase `vehicle_type`. Numeric rounding is not part of the source-file contract because the selected source fields do not define `vehicle_count` or `toll_amount`; any future numeric transformation must first add an explicit schema mapping and tests.
+
+Supported scope is the unquoted course fixture format described above. The shell-based extractors do not support general CSV quoting, embedded commas, or embedded newlines; use a CSV-aware parser before expanding the input contract.
+
+The intermediate transformed file is written to `airflow/dags/staging/transformed_data.csv`. The load stage validates that file and copies it to the final staging output at `airflow/dags/staging/final/transformed_data.csv`.
+
+Each Airflow run extracts into its own temporary work directory. At the start of a run, only generated intermediate files and the project staging directory are removed; the downloaded archive at `airflow/dags/data/tolldata.tgz` is preserved.
+
 ### ETL Pipeline Tasks
 
-The Apache Airflow Directed Acyclic Graph (DAG) for this project is structured to perform the following tasks sequentially.
+The Apache Airflow Directed Acyclic Graph (DAG) for this project is structured to perform the following tasks, with the three extractors running in parallel after input validation.
 #### 1. Preparation
 
 - Task 1.1: Define a set of default arguments for the DAG, including the owner, start date, and retry settings.
 - Task 1.2: Instantiate the DAG with a unique ID and schedule.
 - Task 2.1: Unzip the raw data archive to prepare the source files for extraction.
+- Task 2.1.1: Validate that all required source files exist and are non-empty.
 
 #### 2. Extract
 
 This phase involves extracting data from three different file formats into a single, temporary file.
 
-- Task 2.2: Extract data from the tolldata.csv file.
-- Task 2.3: Extract data from the tollplaza_data.tsv file.
-- Task 2.4: Extract data from a fixed-width file (payment-data.txt).
-- Task 2.5: Consolidate the data extracted from the CSV, TSV, and fixed-width files into a single extracted_data.txt file.
+- Task 2.2: Extract fields 1–4 from `vehicle-data.csv` into `data/csv_data.csv`.
+- Task 2.3: Extract fields 5–7 from `tollplaza-data.tsv` into `data/tsv_data.csv`.
+- Task 2.4: Extract fields 1–10 and 11–20 from `payment-data.txt` into `data/fixed_width_data.csv`.
+- Task 2.5: Consolidate the extracted files into `data/extracted_data.csv`.
+- Task 2.5.1: Validate that the consolidated output is non-empty and has nine fields per row.
 
 #### 3. Transform
 
-- Task 2.6: Transform the consolidated data by rounding the vehicle_count and toll_amount values to the nearest integer.
+- Task 2.6: Transform the consolidated data by uppercasing the `vehicle_type` field.
+- Task 2.6.1: Validate that the transformed output is non-empty, has nine fields per row, and contains an uppercase `vehicle_type`.
 
 #### 4. Load
 
@@ -39,13 +62,25 @@ This phase involves extracting data from three different file formats into a sin
 
 The DAG's task pipeline defines the flow of the ETL process, ensuring that tasks are executed in the correct order. The flow is as follows:
 
-unzip_data_task -> extract_from_csv -> extract_from_tsv -> extract_from_fixed_width -> consolidate_data_task -> transform_data_task -> load_data_task
+unzip_data -> validate_input_data -> [extract_data_from_csv, extract_data_from_tsv, extract_data_from_fixed_width] -> consolidate_data -> validate_consolidated_data -> transform_data -> validate_transformed_data -> load_data
 ### How to Run the Project
 
+- Prepare data: Run `make extract-data`. Override `DATA_URL`, `DATA_DIR`, or `DATA_ARCHIVE` when using a different source or local fixture. Set `DATA_SHA256=<checksum>` with `make get-data` to verify the downloaded archive.
+- Create the environment: Run `make create-venv`. Airflow is installed with the matching Python-version constraints; override `AIRFLOW_CONSTRAINTS_URL` when using a mirror or a locally cached constraints file.
 - Submit the DAG: Copy the Python DAG file to the Airflow dags directory.
 - Unpause and Trigger: Access the Airflow UI, unpause the new DAG, and manually trigger its execution.
-- Monitor the DAG: Use the Airflow UI to monitor the progress of the DAG, observing the status of each task in - the graphical view.
+- Scheduling: The DAG runs daily, does not backfill historical dates when it is unpaused, and allows only one active run at a time.
+- Validate locally: Run `make check` to run the fixture tests and parse the DAG without requiring a live Airflow scheduler.
+- Monitor the DAG: Use the Airflow UI to monitor the progress of each task in the graphical view.
 - List Tasks: Use the Airflow CLI command to list all tasks associated with the DAG.
+
+### Troubleshooting
+
+- If the archive is missing, run `make extract-data` or provide a local `DATA_URL`/`DATA_ARCHIVE`.
+- If `make check` fails, fix the reported fixture or DAG validation error before submitting the DAG to Airflow.
+- If Airflow cannot import the DAG, confirm that the virtual environment was created with `make create-venv` and that the DAG is copied into the configured Airflow `dags` directory.
+
+Airflow 3.0.6 supports Python 3.9–3.12. The Makefile selects the matching constraints file for the active Python version; use a supported interpreter when creating the virtual environment.
 
 ## Grading Criteria
 
